@@ -105,6 +105,8 @@ def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: f
     while time_curr_str - time_i < recording_time * 1000 * 60:  # min to ms
 
         read_line_str = str(arduino.readline())
+        # TODO: algoritmo de deteção
+        # TODO: if deteção serial.write(beep)
 
         if save_data:
             raw_data.append(read_line_str)
@@ -118,7 +120,7 @@ def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: f
 
     if save_data:
         cleaned_data = clean(raw_data)
-        print(cleaned_data[1])
+
         # generate result directory if it does not exist
         os.makedirs(result_dir, exist_ok=True)
 
@@ -161,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--recording_time',
         type=float,
-        default=0.2,
+        default=12,
         help='Time in minutes or fraction of minutes the data acquisition will take.'
     )
 
