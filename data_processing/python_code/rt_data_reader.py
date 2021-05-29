@@ -1,72 +1,25 @@
 # -*- coding: utf-8 -*-
 import argparse
+import collections
 import datetime
+import itertools
 import os
 import sys
 import time
+import timeit
 import pandas as pd
 import serial
 import platform
+import numpy as np
+import threading
 
 
-def getHeaderfromSignals(acquired_signals: list):
-    avail_time_series = ['time', 'acc', 'pulse', 'eda']
-    series_header = []
-    for series_i in acquired_signals:
-        if series_i in avail_time_series and series_i != 'acc':
-            series_header.append(series_i)
-        elif series_i in avail_time_series and series_i == 'acc':
-            series_header.append('acc_x')
-            series_header.append('acc_y')
-            series_header.append('acc_z')
-
-    return series_header
-
-
-def check_default_port(port_name: str):
-    port_str = port_name
-    default = False
-    if platform.system() == 'Windows' and port_name is None:  # for windows OS
-        port_str = 'COM3'  # change to default
-        default = True
-    elif platform.system() == 'Darwin' and port_name is None:  # for MAC OS
-        port_str = '/dev/ttyUSB0'  # change to default
-        default = True
-    elif platform.system() == 'Linux' and port_name is None:  # for GNU/Linux OS
-        port_str = '/dev/ttyUSB0'  # change to default
-        default = True
-
-    return default, port_str
-
-
-def clean_time(data_line):
-    return data_line[2:]
-
-
-def clean(L):  # L is a list
-    """each row of the raw data is acquired as b'XXXXXXXX\r\n', where XXXXXXXX
-    is the readable data (ASCII) of varying length, thus we need to remove first 2 chars + 5 last chars
-    """
-    newl = []  # initialising the new list
-    for i in range(len(L)):
-        temp = L[i].replace(" ", "")
-        temp = temp[2:-5].split(',')
-        newl.append(temp)
-    return newl
-
-
-def write(L):
-    file = open("data.txt", mode='w')
-    for i in range(len(L)):
-        file.write(L[i] + '\n')
-    file.close()
-
-
-def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: float, acquired_signals: list,
-         serial_port=None):
+def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: int, recording_time: float,
+         acquired_signals: list,
+         serial_port=None, sf=100, ft_window_s=1, window_overlap=50):
     """Reads the acceleration, pulse and EDA signals acquired from the ESP32 board"""
 
-    global arduino
+    global arduino, first_ft_window, temp_window_data, window_overlap_frac, mag_list, abs_fft_list, times_fft
     default, port = check_default_port(serial_port)  # the Port name as a string
 
     # Initializing the serial Port
@@ -101,12 +54,19 @@ def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: f
 
     interval_mark = 1
 
+    if detect_seizure:
+        first_ft_window = True
+        temp_window_data = collections.deque([first_read_line])
+        window_overlap_frac = 100 // window_overlap
+        mag_list = []
+        abs_fft_list = []
+        times_fft = []
+
     # recording data until the recording_time stopping criterion is met
     while time_curr_str - time_i < recording_time * 1000 * 60:  # min to ms
+        # start_time = timeit.default_timer()
 
         read_line_str = str(arduino.readline())
-        # TODO: algoritmo de deteção
-        # TODO: if deteção serial.write(beep)
 
         if save_data:
             raw_data.append(read_line_str)
@@ -116,10 +76,49 @@ def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: f
             print("{}x10 seconds were recorded".format(interval_mark))
             interval_mark += 1
 
+        # TODO: detection algorithm (every 1 second)
+        if detect_seizure:
+
+            # first, we add the next acquired value
+            temp_window_data.append(read_line_str)
+
+            # if the first window was recorded, start detection thread and update the temp. window
+            if ((time_curr_str - time_i) * 0.001) == ft_window_s:
+                # algorithm itself
+
+                # TODO: until here, we have (sf * ft_window_s) + 1 points = ft_window_s seconds.
+                mag_arr, abs_ft_arr = detection_algorithm(temp_window_data)
+                times_fft.append(time_curr_str - time_i)
+                mag_list.append(mag_arr)
+                abs_fft_list.append(abs_ft_arr)
+
+                # remove the first/left (sf * ft_window_s) / 2 points, resulting in (sf * ft_window_s) + 1 points
+                for _ in range(sf * ft_window_s // window_overlap_frac):
+                    temp_window_data.popleft()
+                first_ft_window = False
+
+                # np.itertools.starmap(temp_window_data.popleft, np.repeat((), 4096))
+
+            # if the next overlapping window was recorded, start detection thread and update the temp. window
+            elif ((time_curr_str - time_i) * 0.001) % (ft_window_s / window_overlap_frac) == 0 and not first_ft_window:
+                times_fft.append(time_curr_str - time_i)
+                mag_arr, abs_ft_arr = detection_algorithm(temp_window_data)
+                mag_list.append(mag_arr)
+                abs_fft_list.append(abs_ft_arr)
+
+                # remove the first/left (sf * ft_window_s) / 2 points, resulting in (sf * ft_window_s) + 1 points
+                for _ in range(sf * ft_window_s // window_overlap_frac):
+                    temp_window_data.popleft()
+
+            # print(' Time elapsed:', timeit.default_timer() - start_time, 's')
+        # TODO: if detection serial.write(beep)
+
     print("...transmission finished")
 
     if save_data:
-        cleaned_data = clean(raw_data)
+        print("checking on acquired data...")
+        cleaned_data, sampling_delays = clean(raw_data, time_i, sf=100)
+        print_delays(sampling_delays)
 
         # generate result directory if it does not exist
         os.makedirs(result_dir, exist_ok=True)
@@ -129,7 +128,171 @@ def main(save_data: bool, result_dir: str, serial_baud_r: int, recording_time: f
         df = pd.DataFrame(cleaned_data)  # creating dataframe
         t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # string with the date of the experiment
         df.to_csv(os.path.join(result_dir, 'rt_data_{}.csv'.format(t)), header=df_header, sep=",")  # saving csv file
-        print('Data saved as ' + os.path.join(result_dir, 'rt_data_{}.csv'.format(t)))
+        print('Acquired data saved as ' + os.path.join(result_dir, 'rt_data_{}.csv'.format(t)))
+
+        data_fft, header_fft = write_2(times_fft, mag_list, abs_fft_list)
+        df_fft = pd.DataFrame(data_fft)
+
+        shape = df.shape
+        print('\nDataFrame Shape :', shape)
+        print('\nNumber of rows :', shape[0])
+        print('\nNumber of columns :', shape[1])
+        shape = df_fft.shape
+        print('\nDataFrame Shape :', shape)
+        print('\nNumber of rows :', shape[0])
+        print('\nNumber of columns :', shape[1])
+
+        df_fft.to_csv(os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)), header=header_fft,
+                      sep=",")  # saving csv file
+        print('FFT data saved as ' + os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)))
+
+
+def detection_algorithm(data_chunk: collections.deque, magnitude=True):
+    # implement an algorithm based on the following article https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5375767/ [1]
+
+    # TODO: compute the FFT weights based on a series of seizure vs baseline datasets [1]
+    mag_arr = getArrayfromStringList(data_chunk, magnitude=magnitude)
+
+    ft_arr = np.fft.rfft(mag_arr)
+    abs_ft_arr = np.abs(ft_arr)
+    power_ft_arr = np.square(ft_arr)  # redundant, if every ft is expressed as absolute
+    # frequency = np.linspace(0, sampling_rate/2, len(power_spectrum))
+    return mag_arr, abs_ft_arr
+
+
+def write_2(times_fft_l, mag_l, abs_fft_l):
+    newl = []
+    # time_start: getting the first time measurement to shift time values
+
+    for i in range(len(times_fft_l)):
+
+        temp_l = str(times_fft_l[i])
+        mag_arr = np.squeeze(mag_l[i])
+        abs_fft_arr = np.squeeze(abs_fft_l[i])
+
+        for j in range(np.size(mag_arr) - 1):  # check dimensions to print 3 values
+            temp_l = temp_l + "," + str(mag_arr[j])
+
+        temp_l = temp_l + "," + str(mag_arr[-1])
+
+        for j in range(np.size(abs_fft_arr) - 1):
+            temp_l = temp_l + "," + str(abs_fft_arr[j])
+
+        temp_l = temp_l + "," + str(abs_fft_arr[-1])
+
+        temp_l = temp_l.replace(" ", "")
+        temp_l = temp_l.split(',')
+        newl.append(temp_l)
+
+    header = []
+
+    size_mag = np.size(np.squeeze(mag_l[0]))
+    size_abs_fft = np.size(np.squeeze(abs_fft_l[0]))
+
+    header.append('time')
+    for i in range(size_mag):
+        header.append('mag at point {}'.format(str(i)))
+    for i in range(size_abs_fft):
+        header.append('fft bin {}'.format(str(i)))
+    print(header)
+
+    return newl, header
+
+
+def getArrayfromStringList(data_lines: collections.deque, magnitude: bool):
+    if magnitude:
+        data_arr = np.zeros((1, len(data_lines)))  # [mag_acc_t1, mag_acc_t2, ..., mag_acc_tn]
+        for i in range(len(data_lines)):
+            temp = data_lines[i].replace(" ", "")
+            temp = temp[2:-5].split(',')
+            data_arr[0, i] = np.linalg.norm(np.array([float(temp[1]), float(temp[2]), float(temp[3])]))
+
+    else:
+        data_arr = np.zeros((3, len(data_lines)))
+        for i in range(len(data_lines)):
+            temp = data_lines[i].replace(" ", "")
+            temp = temp[2:-5].split(',')
+            data_arr[0, i] = float(temp[1])
+            data_arr[1, i] = float(temp[2])
+            data_arr[2, i] = float(temp[3])
+
+    return data_arr
+
+
+def getHeaderfromSignals(acquired_signals: list):
+    avail_time_series = ['time', 'acc', 'pulse', 'eda']
+    series_header = []
+    for series_i in acquired_signals:
+        if series_i in avail_time_series and series_i != 'acc':
+            series_header.append(series_i)
+        elif series_i in avail_time_series and series_i == 'acc':
+            series_header.append('acc_x')
+            series_header.append('acc_y')
+            series_header.append('acc_z')
+
+    return series_header
+
+
+def check_default_port(port_name):
+    port_str = port_name
+    default = False
+    if platform.system() == 'Windows' and port_name is None:  # for windows OS
+        port_str = 'COM3'  # change to default
+        default = True
+    elif platform.system() == 'Darwin' and port_name is None:  # for MAC OS
+        port_str = '/dev/ttyUSB0'  # change to default
+        default = True
+    elif platform.system() == 'Linux' and port_name is None:  # for GNU/Linux OS
+        port_str = '/dev/ttyUSB0'  # change to default
+        default = True
+
+    return default, port_str
+
+
+def clean_time(data_line):
+    return data_line[2:]
+
+
+def clean(L, time_start: int, sf: int):  # L is a list
+    """each row of the raw data is acquired as b'XXXXXXXX\r\n', where XXXXXXXX
+    is the readable data (ASCII) of varying length, thus we need to remove first 2 chars + 5 last chars
+    """
+    newl = []  # initialising the new list
+    excepted_T = 1000 / sf
+    sampling_delays = []
+
+    # time_start: getting the first time measurement to shift time values
+    temp_prev = -excepted_T
+
+    for i in range(len(L)):
+
+        temp_current = L[i].replace(" ", "")
+        temp_current = temp_current[2:-5].split(',')
+        temp_current[0] = str(int(temp_current[0]) - time_start)
+        newl.append(temp_current)
+
+        if int(temp_current[0]) - temp_prev != excepted_T:
+            sampling_delays.append([i - 1, i])
+
+        temp_prev = int(temp_current[0])
+
+    return newl, sampling_delays
+
+
+def write(L):
+    file = open("data.txt", mode='w')
+    for i in range(len(L)):
+        file.write(L[i] + '\n')
+    file.close()
+
+
+def print_delays(sampling_delays: list):
+    if len(sampling_delays) != 0:
+        print("...delays have occurred while sampling. Check the following lines on the output .csv file:")
+        for i in range(len(sampling_delays)):
+            print("(" + str(i) + ") lines: " + str(sampling_delays[i][0]) + " -> " + str(sampling_delays[i][1]))
+    else:
+        print("...no delays were registered while sampling.")
 
 
 if __name__ == "__main__":
@@ -144,6 +307,13 @@ if __name__ == "__main__":
         type=bool,
         default=True,
         help='Set to True to save data in a .csv file.'
+    )
+
+    parser.add_argument(
+        '--detect_seizure',
+        type=bool,
+        default=True,
+        help='Set to True to enable real-time seizure detection'
     )
 
     parser.add_argument(
@@ -163,7 +333,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--recording_time',
         type=float,
-        default=12,
+        default=0.5,
         help='Time in minutes or fraction of minutes the data acquisition will take.'
     )
 
@@ -182,5 +352,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args.save_data, args.result_dir, args.serial_baud_r, args.recording_time, args.acquired_signals,
+    main(args.save_data, args.detect_seizure, args.result_dir, args.serial_baud_r, args.recording_time,
+         args.acquired_signals,
          args.serial_port)
