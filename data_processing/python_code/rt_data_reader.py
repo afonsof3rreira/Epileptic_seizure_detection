@@ -20,8 +20,6 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
          serial_port=None, sf=100, ft_window_s=1, window_overlap=50):
     """Reads the acceleration, pulse and EDA signals acquired from the ESP32 board"""
 
-    sys.path.append('my/path/to/module/folder')
-
     global arduino, first_ft_window, temp_window_data, window_overlap_frac, mag_list, abs_fft_list, times_fft
     default, port = check_default_port(serial_port)  # the Port name as a string
 
