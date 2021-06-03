@@ -47,8 +47,6 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
     # ignoring the first line to avoid the printing error
     arduino.readline()
 
-    print(2)
-
     print("transmission started...")
     # reading the first line and saving the starting time
     first_read_line = str(arduino.readline())
@@ -272,7 +270,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--recording_time',
         type=float,
-        default=0.5,
+        default=10,
         help='Time in minutes or fraction of minutes the data acquisition will take.'
     )
 
