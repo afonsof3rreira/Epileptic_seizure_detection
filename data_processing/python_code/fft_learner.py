@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import data_processing.python_code.utilities.fft_training as training
+import pandas as pd
 
 
 def main(save_data: bool, data_dir: list, save_dir: str, sf=100, ft_window_s=1, window_overlap=50):
