@@ -12,13 +12,14 @@ import datetime
 #         pass
 
 class data_recorder:
-    def __init__(self, time_reset=True):
+    def __init__(self, time_reset=True, wifi=False):
         self.sampling_delays = None
         self.raw_data = []
         self.time_reset = time_reset
         self.output_data = []
         if time_reset:
             self.starting_time = None
+        self.wifi = wifi
 
     def add_acquisition(self, raw_acquisition: str):
         self.raw_data.append(raw_acquisition)
@@ -42,27 +43,41 @@ class data_recorder:
 
         for i in range(len(self.raw_data)):
             temp_current = self.raw_data[i].replace(" ", "")
-            temp_current = temp_current[2:-5].split(',')
+
+            if self.wifi:
+                temp_current = temp_current.split(',')
+                temp_time = temp_current[0][:-3]
+            else:
+                temp_current = temp_current[2:-5].split(',')
+                temp_time = temp_current[0]
 
             if self.time_reset:
-                temp_current[0] = str(int(temp_current[0]) - self.starting_time)
+                temp_current[0] = str(int(temp_time) - self.starting_time)
 
             self.output_data.append(temp_current)
+
             if save_delays and sf is not None:
                 if int(temp_current[0]) - temp_prev != t_s:
                     self.sampling_delays.append([i - 1, i])
 
                 temp_prev = int(temp_current[0])
 
-    def save_data_to_csv(self, output_path: str, df_header: list, filename=None):
+    def save_data_to_csv(self, output_path: str, df_header: list, filename_extension=None):
         df = pd.DataFrame(self.output_data)  # creating dataframe
-        if filename is None:
-            name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # string with the date of the experiment
+        if filename_extension is None:
+            time_str = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # string with the date of the experiment
         else:
-            name = filename
-        df.to_csv(os.path.join(output_path, 'rt_data_{}.csv'.format(name)), header=df_header,
+            time_str = filename_extension
+
+        if self.wifi:
+            format_str = 'rt_data_wifi_{}.csv'
+        else:
+            format_str = 'rt_data_usb_{}.csv'
+
+        df.to_csv(os.path.join(output_path, format_str.format(time_str)), header=df_header,
                   sep=",")  # saving csv file
-        print('Acquired data saved as ' + os.path.join(output_path, 'rt_data_{}.csv'.format(name)))
+
+        print('Acquired data saved as ' + os.path.join(output_path, format_str.format(time_str)))
 
     def print_delays(self):
         if len(self.sampling_delays) != 0:
@@ -74,12 +89,19 @@ class data_recorder:
             print("...no delays were registered while sampling.")
 
     def set_starting_time(self):
-        self.starting_time = int(self.raw_data[0].split(", ")[0][2:])
+        if self.wifi:
+            self.starting_time = int(self.raw_data[0].split(",")[0][:-3])
+        else:
+            self.starting_time = int(self.raw_data[0].split(", ")[0][2:])
 
 
-def get_current_time(raw_acquisition: str):
-    time_string = raw_acquisition.split(", ")[0]
-    return int(time_string[2:])
+def get_current_time(raw_acquisition: str, wifi=False):
+    time_string = raw_acquisition.split(",")[0]
+    if wifi:
+        return int(time_string[:-3])
+    else:
+        time_string = raw_acquisition.split(", ")[0]
+        return int(time_string[2:])
 
 
 def getHeaderfromSignals(acquired_signals: list):
