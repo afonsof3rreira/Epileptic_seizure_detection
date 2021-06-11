@@ -1,47 +1,108 @@
+%% finding paths to directories (normal>still_motions and seizure data)
+main_dir = cd;
+train_data_dir = fullfile(main_dir, "data_processing", "python_code", "data", "train");
+dir_data = [fullfile(train_data_dir, "normal", "still_motions"), ...
+            fullfile(train_data_dir, "seizure")];
 
-% vector with the names of the .csv files
-name_vec = ["afonso_seizure2_30s_nonfilt.csv", "afonso_videogame_nonfilt.csv", "afonso_jumpingrope_nonfilt.csv", "afonso_runningaround_nonfilt.csv"];
+%% retreiving data
+% structs containing filenames for all training data .csv files 
+train_data_normal = dir(fullfile(dir_data(1, 1), '**\*.csv')); % normal
+train_data_seizure = dir(fullfile(dir_data(1, 2), '**\*.csv')); % seizure
 
-% T(:,:) = " ";
 
-for i = 1: length(name_vec)
-    mat = readtable(name_vec(i));
-    T(i, :, :) = table2array(readtable(name_vec(i)));
+n_samples_normal = size(train_data_normal, 1);
+n_samples_seizure = size(train_data_seizure, 1);
+
+train_data_full_paths_normal = strings([n_samples_normal, 1]);
+train_data_full_paths_seizure = strings([n_samples_seizure, 1]);
+
+train_data_names = strings([n_samples_normal, 2]);
+
+
+for i = 1: n_samples_normal
+    train_data_full_paths_normal(i, 1) = strcat(dir_data(1, 1), '\', train_data_normal(i).name);    
 end
 
-%% computing the acc magnitudes of the acquisitions
+for i = 1: n_samples_seizure
+    train_data_full_paths_seizure(i, 1) = strcat(dir_data(1, 2), '\', train_data_seizure(i).name);
+end
 
-times = T(:, :, 2);
-acc = T(:, :, 3:5);
-pulse = T(:, :, 6);
-eda = T(:, :, 7);
 
-acc_mag = zeros(size(T, 1), size(T, 2));
+%% normal
+% vector with the names of the .csv files
+T_normal = zeros(n_samples_normal, 9001, 7);
+
+for i = 1: length(n_samples_normal)
+    T_normal(i, :, :) = table2array(readtable(train_data_full_paths_normal(i, 1)));
+end
+
+times_normal = T_normal(:, :, 2);
+acc_normal = T_normal(:, :, 3:5);
+
+acc_mag_normal = zeros(size(T_normal, 1), size(T_normal, 2));
 
 % compute magnitudes for acc of every recording
-for i = 1:size(T, 1)
-    temp = zeros(1, size(T, 2));
-    for j = 1:size(T, 2)
-        temp(1, j) = sqrt(acc(i, j, 1)^2 + acc(i, j, 2)^2 + acc(i, j, 3)^2);
+for i = 1:size(T_normal, 1)
+    temp = zeros(1, size(T_normal, 2));
+    for j = 1:size(T_normal, 2)
+        temp(1, j) = sqrt(acc_normal(i, j, 1)^2 + acc_normal(i, j, 2)^2 + acc_normal(i, j, 3)^2);
     end
-    acc_mag(i, :) = temp(1, :);
+    acc_mag_normal(i, :) = temp(1, :);
+end
+
+%% seizure
+% vector with the names of the .csv files
+T_seizure = zeros(n_samples_seizure, 9001, 7);
+
+for i = 1: length(n_samples_seizure)
+    T_seizure(i, :, :) = table2array(readtable(train_data_full_paths_normal(i, 1)));
+end
+
+times_seizure = T_seizure(:, :, 2);
+acc_seizure = T_seizure(:, :, 3:5);
+
+acc_mag_seizure = zeros(size(T_seizure, 1), size(T_seizure, 2));
+
+% compute magnitudes for acc of every recording
+for i = 1:size(T_seizure, 1)
+    temp = zeros(1, size(T_seizure, 2));
+    for j = 1:size(T_seizure, 2)
+        temp(1, j) = sqrt(acc_seizure(i, j, 1)^2 + acc_seizure(i, j, 2)^2 + acc_seizure(i, j, 3)^2);
+    end
+   acc_mag_seizure(i, :) = temp(1, :);
 end
 
 %% plotting acc magnitudes
 
 figure()
-subplot(4, 1, 1)
-plot(times(1, 1:4500)./1000, acc_mag(1, 1:4500)); grid on; grid minor;
-title('seizure');
-subplot(4, 1, 2)
-plot(times(2, :)./1000, acc_mag(2, :)); grid on; grid minor;
-title('playing video games');
-subplot(4, 1, 3)
-plot(times(3, :)./1000, acc_mag(3, :)); grid on; grid minor;
-title('rope jumping');
-subplot(4, 1, 4)
-plot(times(4, :)./1000, acc_mag(4, :)); grid on; grid minor;
-title('running');
+for i = 1 : n_samples_normal
+    subplot(n_samples_normal, 1, i)
+    plot(times_normal(1, :)./1000, acc_mag_normal(i, :)); grid on; grid minor;
+    title(strcat('signal-', num2str(i)));
+end
+sgtitle('normal signals');
+
+figure()
+for i = 1 : n_samples_seizure
+    subplot(n_samples_seizure, 1, i)
+    plot(times_seizure(1, :)./1000, acc_mag_seizure(i, :)); grid on; grid minor;
+    title(strcat('signal-', num2str(i)));
+end
+sgtitle('seizure signals');
+
+
+% subplot(4, 1, 1)
+% plot(times(1, 1:4500)./1000, acc_mag(1, 1:4500)); grid on; grid minor;
+% title('seizure');
+% subplot(4, 1, 2)
+% plot(times(2, :)./1000, acc_mag(2, :)); grid on; grid minor;
+% title('playing video games');
+% subplot(4, 1, 3)
+% plot(times(3, :)./1000, acc_mag(3, :)); grid on; grid minor;
+% title('rope jumping');
+% subplot(4, 1, 4)
+% plot(times(4, :)./1000, acc_mag(4, :)); grid on; grid minor;
+% title('running');
 
 %% plotting the FFTs of the acc magnitudes
 
@@ -75,7 +136,7 @@ for i = 1 : size(maximas, 1) - 1
     else
         instant_rate(i, 2) = (60 / period_i);
     end
-    
+
 end
 instant_rate(end, 1) = maximas(end, 1);
 instant_rate(end, 2) = 70;
