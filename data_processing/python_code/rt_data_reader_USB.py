@@ -129,18 +129,18 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
         print("saving acquired data...")
         data_ac.save_data_to_csv(result_dir, df_header=acq.getHeaderfromSignals(acquired_signals))
 
-        t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # string with the date of the experiment
+        # t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # string with the date of the experiment
 
-        data_fft, header_fft = write_2(times_fft, mag_list, abs_fft_list)
-        df_fft = pd.DataFrame(data_fft)
+        # data_fft, header_fft = write_2(times_fft, mag_list, abs_fft_list)
+        # df_fft = pd.DataFrame(data_fft)
 
-        shape = df_fft.shape
+        # shape = df_fft.shape
         # print('\nDataFrame Shape :', shape)
         # print('\nNumber of rows :', shape[0])
         # print('\nNumber of columns :', shape[1])
 
-        df_fft.to_csv(os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)), header=header_fft,
-                      sep=",")  # saving csv file
+        # df_fft.to_csv(os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)), header=header_fft,
+        #              sep=",")  # saving csv file
         # print('FFT data saved as ' + os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)))
 
 
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--detect_seizure',
         type=bool,
-        default=True,
+        default=False,
         help='Set to True to enable real-time seizure detection'
     )
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--recording_time',
         type=float,
-        default=10,
+        default=1.5,
         help='Time in minutes or fraction of minutes the data acquisition will take.'
     )
 

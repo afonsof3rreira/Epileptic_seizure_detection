@@ -100,9 +100,11 @@ def get_current_time(raw_acquisition: str, wifi=False):
     if wifi:
         return int(time_string[:-3])
     else:
-        time_string = raw_acquisition.split(", ")[0]
-        return int(time_string[2:])
-
+        time_string = raw_acquisition.split(", ")
+        try:
+           return int(float(time_string[0][2:]))
+        except:
+            print('error in time conversion')
 
 def getHeaderfromSignals(acquired_signals: list):
     avail_time_series = ['time', 'acc', 'pulse', 'eda']
