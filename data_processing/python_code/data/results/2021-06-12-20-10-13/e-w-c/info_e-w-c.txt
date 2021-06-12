@@ -1,0 +1,74 @@
+========== Experiment No.e-w-c ==========
+
+---------- Training data ----------
+-------------------------------------
+
+# ['normal', 'activities', 'eating', 'afonso_eating2_nonfilt.csv']
+
+# ['normal', 'activities', 'eating', 'diogo_eating1.csv']
+
+# ['normal', 'activities', 'walking', 'afonso_walingaround2_nonfilt.csv']
+
+# ['normal', 'activities', 'walking', 'afonso_walkingaround_nonfilt.csv']
+
+# ['normal', 'activities', 'computer', 'diogo_PCwriting1.csv']
+
+# ['normal', 'activities', 'computer', 'diogo_PCwriting2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure1.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure6.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure1.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure4.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure5.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure6.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure7.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure8.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure9.csv']
+
+-------------------------------------
+---------- Testing data ----------
+-------------------------------------
+
+# ['normal', 'activities', 'eating', 'afonso_eating_nonfilt.csv']
+
+# ['normal', 'activities', 'eating', 'diogo_eating2.csv']
+
+# ['normal', 'activities', 'walking', 'diogo_walking1.csv']
+
+# ['normal', 'activities', 'walking', 'diogo_walking2.csv']
+
+# ['normal', 'activities', 'computer', 'afonso_videogame2_nonfilt.csv']
+
+# ['normal', 'activities', 'computer', 'afonso_videogame_nonfilt.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure3.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure4.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure5.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure7.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure8.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure9.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure10.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure3.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure10.csv']
+
+-------------------------------------
