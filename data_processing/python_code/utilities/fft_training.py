@@ -397,13 +397,6 @@ class fft_training:
 
                 for i in range(n_windows):
 
-                    if n_avg_i == n_avg - 1:
-                        signal_detected_data[ind_initial - self.stride + self.window_size, -2] = scr_vm_sum / n_avg
-                        signal_detected_data[ind_initial - self.stride + self.window_size, -1] = scr_sma_sum / n_avg
-                        scr_vm_sum = 0
-                        scr_sma_sum = 0
-                        n_avg_i = 0
-
                     fft_temp_vm = np.abs(
                         np.fft.rfft(signal_data[int(ind_initial):ind_initial + self.window_size, 6]))
                     fft_temp_sma = np.abs(
@@ -421,8 +414,16 @@ class fft_training:
                     scr_vm_sum += scr_vm
                     scr_sma_sum += scr_sma
 
+                    if n_avg_i == n_avg - 1:
+                        signal_detected_data[ind_initial + self.window_size, -2] = scr_vm_sum / n_avg
+                        signal_detected_data[ind_initial + self.window_size, -1] = scr_sma_sum / n_avg
+                        scr_vm_sum = 0
+                        scr_sma_sum = 0
+                        n_avg_i = 0
+                    else:
+                        n_avg_i += 1
+
                     ind_initial += self.stride
-                    n_avg_i += 1
 
                 signal_detected = signal_info
                 signal_detected.append(signal_detected_data)
