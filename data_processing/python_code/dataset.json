@@ -1,0 +1,98 @@
+{
+  "normal": {
+
+    "activities": {
+
+      "eating": {
+        "normal//activities//afonso_eating2_nonfilt.csv": 0,
+        "normal//activities//afonso_eating_nonfilt.csv": 0,
+        "normal//activities//diogo_eating1.csv": 1,
+        "normal//activities//diogo_eating2.csv": 1
+      },
+
+      "walking": {
+        "normal//activities//afonso_walingaround2_nonfilt.csv":  0,
+        "normal//activities//afonso_walkingaround_nonfilt.csv":  0,
+        "normal//activities//diogo_walking1.csv":  1,
+        "normal//activities//diogo_walking2.csv": 1
+      },
+
+      "sports": {
+        "normal//activities//afonso_jumpingrope2_nonfilt.csv":  0,
+        "normal//activities//afonso_jumpingrope_nonfilt.csv":  0,
+        "normal//activities//afonso_runningaround_nonfilt.csv":  0,
+        "normal//activities//diogo_jumprope1.csv":  1,
+        "normal//activities//diogo_jumprope2.csv":  1,
+        "normal//activities//diogo_running1.csv":  1,
+        "normal//activities//diogo_running2.csv":  1,
+        "normal//activities//diogo_sport1.csv":  1,
+        "normal//activities//diogo_sport2.csv":  1
+      },
+
+      "computer": {
+        "normal//activities//afonso_videogame2_nonfilt.csv": 0,
+        "normal//activities//afonso_videogame_nonfilt.csv": 0,
+        "normal//activities//diogo_PCwriting1.csv": 1,
+        "normal//activities//diogo_PCwriting2.csv": 1
+      }
+    },
+
+    "still motions": {
+
+      "standing": {
+        "normal//still_motions//diogo_standingstill1.csv": 1,
+        "normal//still_motions//diogo_standingstill2.csv": 1,
+        "normal//still_motions//diogo_standingstill3_filt.csv": 1,
+        "normal//still_motions//diogo_standingstill4.csv": 1,
+        "normal//still_motions//diogo_standingstill5.csv": 1,
+        "normal//still_motions//diogo_standingstill6.csv": 1,
+        "normal//still_motions//diogo_standingstill7_filt.csv": 1,
+        "normal//still_motions//diogo_standingstill8_filt.csv": 1,
+        "normal//still_motions//diogo_standingstill9.csv": 1,
+        "normal//still_motions//diogo_standingstill10.csv": 1
+      },
+      "random moving": {
+        "normal//still_motions//afonso_layingonBed1_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonBed2_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonBed3_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonBed4_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonCouch1_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonCouch2_nonfilt.csv": 0,
+        "normal//still_motions//afonso_layingonCouch3_nonfillt.csv": 0,
+        "normal//still_motions//afonso_sitting1_nonfilt.csv": 0,
+        "normal//still_motions//afonso_sitting2_nonfilt.csv": 0,
+        "normal//still_motions//afonso_sitting3_nonfilt.csv": 0,
+        "normal//still_motions//diogo_randomslowtask1.csv": 1,
+        "normal//still_motions//diogo_randomslowtask2.csv": 1,
+        "normal//still_motions//diogo_randomslowtask3.csv": 1
+      }
+    }
+  },
+
+
+  "seizure": {
+    "seizure//cropped_afonso_seizure1.csv": 0,
+    "seizure//cropped_afonso_seizure2.csv": 0,
+    "seizure//cropped_afonso_seizure3.csv": 0,
+    "seizure//cropped_afonso_seizure4.csv": 0,
+    "seizure//cropped_afonso_seizure5.csv": 0,
+    "seizure//cropped_afonso_seizure6.csv": 0,
+    "seizure//cropped_afonso_seizure7.csv": 0,
+    "seizure//cropped_afonso_seizure8.csv": 0,
+    "seizure//cropped_afonso_seizure9.csv": 0,
+    "seizure//cropped_afonso_seizure10.csv": 0,
+    "seizure//cropped_diogo_seizure1.csv": 1,
+    "seizure//cropped_diogo_seizure2.csv": 1,
+    "seizure//cropped_diogo_seizure3.csv": 1,
+    "seizure//cropped_diogo_seizure4.csv": 1,
+    "seizure//cropped_diogo_seizure5.csv": 1,
+    "seizure//cropped_diogo_seizure6.csv": 1,
+    "seizure//cropped_diogo_seizure7.csv": 1,
+    "seizure//cropped_diogo_seizure8.csv": 1,
+    "seizure//cropped_diogo_seizure9.csv": 1,
+    "seizure//cropped_diogo_seizure10.csv": 1
+  }
+}
+
+
+

@@ -1,0 +1,9 @@
+[
+  ["activities"],
+  ["still motions"],
+  ["eating", "walking", "computer"],
+  ["eating", "walking", "computer", "still motions"],
+  ["eating", "walking", "computer", "random moving"],
+  ["walking", "sports"],
+  ["sports"]
+]

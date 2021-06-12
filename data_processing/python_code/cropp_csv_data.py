@@ -27,8 +27,8 @@ def crop_csv_data(folder_dir: str, saving_dir: str, cropping_vals: list):
 
 
 
-folder_data_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data', 'train', 'raw_data')
-saving_data_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data', 'train')
+folder_data_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data', 'data/train', 'raw_data')
+saving_data_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data', 'data/train')
 
 
 folder_dir_list = os.path.normpath(os.path.join(folder_data_dir, 'seizure'))
