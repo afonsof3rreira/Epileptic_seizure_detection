@@ -1,4 +1,0 @@
-# Ignore everything in this directory
-normal/activities
-# Except this file
-!.gitignore
