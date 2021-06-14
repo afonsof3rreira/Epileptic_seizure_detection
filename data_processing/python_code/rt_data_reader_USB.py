@@ -18,12 +18,27 @@ import data_processing.python_code.utilities.data_acquisition as acq
 def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: int, recording_time: float,
          acquired_signals: list,
          serial_port=None, sf=100, ft_window_s=1, window_overlap=50):
-    """Reads the acceleration, pulse and EDA signals acquired from the ESP32 board"""
+
+    """Reads the acceleration, pulse and EDA signals acquired from the ESP32 board
+
+           Args:
+               save_data (bool): whether or not to save the acquired signals. Set to False if you only want to detect seizures.
+               detect_seizure (bool): set to True if you want to detect seizures.
+               result_dir (str): saving path if save_data=True
+               serial_baud_r (int): the Baud rate used in the ESP32 for data transmission.
+               recording_time (float): time in minutes or fraction of minutes the data acquisition will take.
+               acquired_signals (list): a list of the names (str) of the signals needed to be acquired. Edit it if you do not have some sensors.
+               serial_port (str): name of the serial port, depending on the OS and computer itself. Specify yours, otherwise it will assume a default one.
+               sf (int): the sampling frequency (fixed at 100 Hz for now).
+               ft_window_s (int): the size of the real time detection window in seconds.
+               window_overlap (int): the percentage of overlap between successive windows.
+    """
 
     global arduino, first_ft_window, temp_window_data, window_overlap_frac, mag_list, abs_fft_list, times_fft
     default, port = check_default_port(serial_port)  # the Port name as a string
 
-    # Initializing the serial Port
+    """Initialising Serial connection"""
+
     printed_str1 = 'Trying to connect to'
     if default:
         printed_str1 += ' default port'
@@ -278,7 +293,7 @@ if __name__ == "__main__":
         '--acquired_signals',
         type=list,
         default=['time', 'acc', 'pulse', 'eda'],
-        help='Time in minutes or fraction of minutes the data acquisition will take.'
+        help='A list of the names of the signals needed to be acquired. Edit it if you do not have some sensors.'
     )
 
     parser.add_argument(
