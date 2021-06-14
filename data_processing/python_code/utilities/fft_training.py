@@ -16,6 +16,7 @@ class fft_training:
         """
         self.sf = sf
         self.window_size = int((window_size * sf) / 1000)  # keeps the integer part (floor)
+        print(self.window_size)
         assert 0 <= overlap < 100
         self.stride = int(np.ceil(((100 - overlap) / 100) * self.window_size))
         self.raw_data = {}
