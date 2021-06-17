@@ -85,8 +85,9 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
         sma_weights = np.transpose(df_spectral_weights['SMA weights'].to_numpy())
         # print(vm_weights)
 
-        VM_thrs = 1.6886873621458105    # max_params.iloc[0]['VM thrs.'] ,
-        SMA_thrs = 1.6174331964472095     # max_params.iloc[0]['SMA thrs.']
+        VM_thrs = 1.7065725297694536   # max_params.iloc[0]['VM thrs.'] ,
+        SMA_thrs = 1.6968069180073173   # max_params.iloc[0]['SMA thrs.']
+
         print(VM_thrs)
 
         first_ft_window = True
@@ -209,10 +210,12 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
 
             if scr_vm_avg > VM_thrs and scr_sma_avg > SMA_thrs:
                 arduino.write(b's')
-                print('!!!!!!!!!!!!')
+                print('...SEIZURE DETECTED!!!!!!')
 
             else:
-                arduino.write(b'n')
+                # arduino.write(b'n')
+                print('...normal')
+
 
             scr_vm_sum = 0
             scr_sma_sum = 0
