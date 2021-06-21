@@ -1,0 +1,96 @@
+========== Experiment No.s ==========
+
+---------- Training data ----------
+-------------------------------------
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill1.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill5.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill6.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill8_filt.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill10.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonBed4_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonCouch1_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonCouch2_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_sitting1_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'diogo_randomslowtask1.csv']
+
+# ['normal', 'still motions', 'random moving', 'diogo_randomslowtask3.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure1.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure3.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure4.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure5.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure7.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure10.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure4.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure6.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure9.csv']
+
+-------------------------------------
+---------- Testing data ----------
+-------------------------------------
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill2.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill3_filt.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill4.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill7_filt.csv']
+
+# ['normal', 'still motions', 'standing', 'diogo_standingstill9.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonBed1_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonBed2_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonBed3_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_layingonCouch3_nonfillt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_sitting2_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'afonso_sitting3_nonfilt.csv']
+
+# ['normal', 'still motions', 'random moving', 'diogo_randomslowtask2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure6.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure8.csv']
+
+# ['seizure', ' ', ' ', 'cropped_afonso_seizure9.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure1.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure2.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure3.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure5.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure7.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure8.csv']
+
+# ['seizure', ' ', ' ', 'cropped_diogo_seizure10.csv']
+
+-------------------------------------
