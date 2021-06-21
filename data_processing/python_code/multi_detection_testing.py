@@ -39,7 +39,7 @@ os.makedirs(os.path.join(results_dir, t), exist_ok=True)
 
 
 for i in range(len(combo_set)):
-    experiment_name = '-'.join([str(num[0]) for num in combo_set[i]])
+    experiment_name = '-'.join([str(num[0]) for num in combo_set[i]])   # TODO: create a function to convert types to distinguishable and readable names
     saving_dir = os.path.join(results_dir, t, experiment_name)
     os.makedirs(saving_dir, exist_ok=True)
 

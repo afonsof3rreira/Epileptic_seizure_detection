@@ -75,14 +75,14 @@ for root, dirs, files in os.walk(results_dir):
         if data_type not in result_dict[experiment_type]:
             result_dict[experiment_type][data_type] = {}
 
-        vm_min = lims_dict[experiment_type]['normal'][0][0]
-        vm_max = lims_dict[experiment_type]['seizure'][0][1]
+        vm_min = 1.2392504079903992 # lims_dict[experiment_type]['normal'][0][0]
+        vm_max = 1.831191762243868  # lims_dict[experiment_type]['seizure'][0][1]
 
-        sma_min = lims_dict[experiment_type]['normal'][1][0]
-        sma_max = lims_dict[experiment_type]['seizure'][1][1]
+        sma_min = 1.291357367335415 # lims_dict[experiment_type]['normal'][1][0]
+        sma_max = 1.9333191558992602 # lims_dict[experiment_type]['seizure'][1][1]
 
-        vm_searched_vals = np.linspace(vm_min, vm_max, 10)
-        sma_searched_vals = np.linspace(sma_min, sma_max, 10)
+        vm_searched_vals = np.linspace(vm_min, vm_max, 20)
+        sma_searched_vals = np.linspace(sma_min, sma_max, 20)
 
         probs_combo = np.zeros((len(combo_set), 2, len(vm_searched_vals), len(sma_searched_vals)))
 
@@ -108,7 +108,10 @@ for root, dirs, files in os.walk(results_dir):
 
                     class_denom = data_arr.shape[0]
 
-                    filt_arr_combo = vm_data_arr[(vm_data_arr > threshold_vm) * (sma_data_arr > threshold_sma)]
+                    if data_type == 'seizure':
+                        filt_arr_combo = vm_data_arr[(vm_data_arr > threshold_vm) * (sma_data_arr > threshold_sma)]
+                    if data_type == 'normal':
+                        filt_arr_combo = vm_data_arr[(vm_data_arr < threshold_vm) * (sma_data_arr < threshold_sma)]
 
                     combo_correct_num = len(filt_arr_combo)
 
@@ -130,5 +133,5 @@ for root, dirs, files in os.walk(results_dir):
                     result_dict[experiment_type][data_type][str(threshold_vm) + "," + str(threshold_sma)] = [
                         probs_combo[experiment_type_n, data_type_n, i, j] / n_signals]
 
-with open('probs_results_parametric_combo.txt', 'w') as json_file:
+with open('probs_results_parametric_combo_vf_20_20_specific.txt', 'w') as json_file:
     json.dump(result_dict, json_file)

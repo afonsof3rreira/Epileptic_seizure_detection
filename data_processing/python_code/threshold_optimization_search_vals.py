@@ -12,7 +12,7 @@ combo_set = json.load(f)
 f.close()
 
 # Opening JSON file
-f = open('probs_results_parametric_combo.txt', )
+f = open('probs_results_parametric_combo_vf_20_20_min_max.txt', )
 probs_dict = json.load(f)
 f.close()
 
@@ -101,4 +101,4 @@ for experiment, vals in probs_dict.items():
 
 df = pd.DataFrame(data_list)
 
-df.to_csv('resuts_parametric_search.csv', sep=",", header=df_header)
+df.to_csv('resuts_parametric_search_vf.csv', sep=",", header=df_header)

@@ -22,20 +22,6 @@ def main(preprocessed_data_dir: str, feature_data_dir: str, save_features: bool,
     else:
         trainer.set_acc_features(feature_data_dir)
 
-    # Opening JSON file
-    f = open('dataset.json', )
-
-    # returns JSON object as a dictionary
-    data_set = json.load(f)
-
-    # Iterating through the json
-    # list
-    for i in data_set['emp_details']:
-        print(i)
-
-    # Closing file
-    f.close()
-
     trainer.spectral_weights_extractor()
 
     if saving_weights_dir is not None:

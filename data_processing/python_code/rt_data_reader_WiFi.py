@@ -20,7 +20,7 @@ from firebase_admin import db
 def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: int, recording_time: float,
          acquired_signals: list,
          serial_port=None, sf=100, ft_window_s=1, window_overlap=50):
-    """Reads the acceleration, pulse and EDA signals acquired from the ESP32 board"""
+    """Reads the acceleration, pulse and EDA signals acquired from the Firebase. This script is not fully functional."""
 
     global arduino, first_ft_window, temp_window_data, window_overlap_frac, mag_list, abs_fft_list, times_fft, target_ref
     default, port = check_default_port(serial_port)  # the Port name as a string

@@ -12,7 +12,7 @@ combo_set = json.load(f)
 f.close()
 
 # Opening JSON file
-f = open('probs_results_parametric_combo.txt', )
+f = open('probs_results_parametric_combo_vf_20_20_specific.txt', )
 probs_dict = json.load(f)
 f.close()
 
@@ -54,8 +54,8 @@ for experiment, vals in probs_dict.items():
             parameter_set_splt[1] = strings[1] # SMA
 
             if data_type == 'normal':
-                false_positives[i] = probability_set[0]
-                true_negatives[i] = 1 - probability_set[0]
+                true_negatives[i] = probability_set[0]
+                false_positives[i] = 1 - probability_set[0]
 
             if data_type == 'seizure':
                 true_positives[i] = probability_set[0]
@@ -81,7 +81,7 @@ for experiment, vals in probs_dict.items():
     curr_exp_data.append([max_acc[0][0], max_acc[0][1], -1, max_acc[1]])
 
     df = pd.DataFrame(curr_exp_data)
-    df.to_csv('classification_results/experiment_{}.csv'.format(experiment), sep=",", header=df_header)
+    df.to_csv('classification_results/specific/experiment_{}.csv'.format(experiment), sep=",", header=df_header)
 
 # with open('confusion_matrix_results.txt', 'w') as json_file:
 #     json.dump(data_final, json_file)

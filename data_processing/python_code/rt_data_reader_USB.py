@@ -73,17 +73,22 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
     interval_mark = 1
 
     if detect_seizure:
-        threshold_param_file = "experiment_a.csv"
-        path_to_thresholds = os.path.join(os.path.dirname(sys.argv[0]), "classification_results", threshold_param_file)
-        path_to_spectral_weights = os.path.join(os.path.dirname(sys.argv[0]), "data", "results", "2021-06-12-22-50-19", "a", "spectral_weights_a.csv")
+        # commented for manual threshold input ---------------
 
-        df_thresholds = pd.read_csv(path_to_thresholds, usecols=['VM thrs.', 'SMA thrs.'])
-        max_params = df_thresholds.iloc[[-1]]
+        # threshold_param_file = "experiment_a.csv"
+        # path_to_thresholds = os.path.join(os.path.dirname(sys.argv[0]), "classification_results", threshold_param_file)
+        # path_to_spectral_weights = os.path.join(os.path.dirname(sys.argv[0]), "data", "results", "2021-06-12-22-50-19", "a", "spectral_weights_a.csv")
+        #
+        # df_thresholds = pd.read_csv(path_to_thresholds, usecols=['VM thrs.', 'SMA thrs.'])
+        # max_params = df_thresholds.iloc[[-1]]
+        #
+        # df_spectral_weights = pd.read_csv(path_to_spectral_weights, index_col=[0])
+        # vm_weights = np.transpose(df_spectral_weights['VM weights'].to_numpy())
+        # sma_weights = np.transpose(df_spectral_weights['SMA weights'].to_numpy())
 
-        df_spectral_weights = pd.read_csv(path_to_spectral_weights, index_col=[0])
-        vm_weights = np.transpose(df_spectral_weights['VM weights'].to_numpy())
-        sma_weights = np.transpose(df_spectral_weights['SMA weights'].to_numpy())
         # print(vm_weights)
+        # commented for manual threshold input ---------------
+
 
         VM_thrs = 1.7065725297694536   # max_params.iloc[0]['VM thrs.'] ,
         SMA_thrs = 1.6968069180073173   # max_params.iloc[0]['SMA thrs.']
