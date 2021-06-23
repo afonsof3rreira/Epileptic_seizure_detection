@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+/python_code/data/results/2021-06-12-20-10-13/
