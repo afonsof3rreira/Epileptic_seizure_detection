@@ -11,6 +11,7 @@ import serial
 import platform
 import numpy as np
 import threading
+import json
 import data_processing.python_code.utilities.data_acquisition as acq
 import firebase_admin
 from firebase_admin import credentials
@@ -22,109 +23,202 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
          serial_port=None, sf=100, ft_window_s=1, window_overlap=50):
     """Reads the acceleration, pulse and EDA signals acquired from the Firebase. This script is not fully functional."""
 
-    global arduino, first_ft_window, temp_window_data, window_overlap_frac, mag_list, abs_fft_list, times_fft, target_ref
+    global arduino, first_ft_window, read_line_str, window_overlap_frac, mag_list, abs_fft_list, times_fft, target_ref, node_name, root_ref, abs_fft_vm_list, abs_fft_sma_list, vm_weights, sma_weights, detection_window_it, scr_vm_sum, scr_sma_sum, detection_window, VM_thrs, SMA_thrs, curr_len
     default, port = check_default_port(serial_port)  # the Port name as a string
 
     # Initializing firebase credentials and URL
-    cred = credentials.Certificate("key.json")
+    cred = credentials.Certificate("WiFi_database//key.json")
     url_firebase = {'databaseURL': 'https://esp32wifitest-4f0ee-default-rtdb.europe-west1.firebasedatabase.app/'}
     firebase_admin.initialize_app(cred, url_firebase)
 
-    # Initializing the serial Port
-    node_name = "2021-06-03_18:03:19"
-
     try:
-        target_ref = db.reference(node_name)  # .child("Value").order_by_key().limit_to_last(1).get()
-        print('Trying to connect to ' + url_firebase['databaseURL'] + ' at ' + str(serial_baud_r) + ' BAUD.')
+        root_ref = db.reference("/")
+        print('Successfully connected to ' + url_firebase['databaseURL'] + ' at ' + str(serial_baud_r) + ' BAUD.')
 
     except:
         print('Failed to connect to ' + url_firebase['databaseURL'] + ' at ' + str(serial_baud_r) +
-              'BAUD. No node named' + node_name + 'was found.')
+              'BAUD.')
+
+    print("...accessing data base nodes")
+
+
+    # Opening JSON file
+
+    json_path = 'WiFi_database/avail_nodes.json'
+    f = open(json_path, )
+
+    # returns JSON object as
+    # a dictionary
+    stored_data = json.load(f)
+    found_new_node = False
+
+    print("...searching for node update")
+
+    while not found_new_node:
+        data = root_ref.get(shallow=True)
+        for key, val in data.items():
+            if key not in stored_data:
+                print(key)
+                node_name = key
+                found_new_node = True
+                print('found new node!')
+
+    with open(json_path, 'w') as file:
+        json.dump(data, file)
+    f.close()
 
     """Initialising variables"""
 
     data_ac = acq.data_recorder(wifi=True)
     raw_data = []
 
+    target_ref = db.reference("/" + node_name)
+
+    # target_ref = db.reference("/" + "2021-06-23_00:41:03")
+
     """Receiving data and storing it in a list"""
 
     print("transmission started...")
+    print(" ")
+
     # reading the first line and saving the starting time
+
     first_line_ref = target_ref.order_by_key().limit_to_last(1).get()
-    first_line_key = list(first_line_ref.items())[0]
-    first_read_line = first_line_key[1]  # time, acc_x, acc_y, acc_z, pulse, eda
+    print(type(first_line_ref))
+    print(first_line_ref)
+    print(1)
 
-    data_ac.add_acquisition(first_read_line)
+    # last_JSON
 
-    time_i = acq.get_current_time(first_read_line, wifi=True)
+    # Data_dict = list(first_line_ref.items())[0][1]
+    # Data_str = list(Data_dict.items())[0][1]
+    # Data = np.array(list(map(lambda x: x.split(","), Data_str))).astype(np.float)
+
+    print(type(first_line_ref))
+    print(first_line_ref)
+    print(2)
+    if type(first_line_ref) is list:
+        Data_dict = first_line_ref[1]
+
+    if type(first_line_ref) is collections.OrderedDict:
+        Data_dict = list(first_line_ref.items())[0][1]
+
+    print(3)
+    print(type(Data_dict))
+    print(Data_dict)
+
+    first_read_line = Data_dict['Data']
+
+    time_i_str = first_read_line[0].split(",")[0]
+    time_i = int(float(time_i_str))
+
+    print(time_i)
     time_curr = time_i
 
     interval_mark = 1
 
     if detect_seizure:
+        # commented for manual threshold input ---------------
+
+        # threshold_param_file = "experiment_a.csv"
+        # path_to_thresholds = os.path.join(os.path.dirname(sys.argv[0]), "classification_results", threshold_param_file)
+        path_to_spectral_weights = os.path.join(os.path.dirname(sys.argv[0]), "data", "results", "2021-06-12-22-50-19",
+                                                "a", "spectral_weights_a.csv")
+
+        df_spectral_weights = pd.read_csv(path_to_spectral_weights, index_col=[0])
+        vm_weights = np.transpose(df_spectral_weights['VM weights'].to_numpy())
+        sma_weights = np.transpose(df_spectral_weights['SMA weights'].to_numpy())
+
+        # commented for manual threshold input ---------------
+
+        VM_thrs = 1.7065725297694536  # max_params.iloc[0]['VM thrs.'] ,
+        SMA_thrs = 1.6968069180073173  # max_params.iloc[0]['SMA thrs.']
+
+        print(VM_thrs)
+
         first_ft_window = True
-        temp_window_data = collections.deque([first_read_line])
+        read_line_str = collections.deque([first_read_line])
         window_overlap_frac = 100 // window_overlap
         mag_list = []
-        abs_fft_list = []
+        abs_fft_vm_list = []
+        abs_fft_sma_list = []
         times_fft = []
+        detection_window = 5  # seconds
+        detection_window_it = 0
+        scr_vm_sum = 0
+        scr_sma_sum = 0
+        scr_vm = 0
+        scr_sma = 0
 
     # recording data until the recording_time stopping criterion is met
-    i = 0
-    while i < 100: # time_curr - time_i < recording_time * 1000 * 60:  # min to ms
+    len_data = len(target_ref.get(shallow=True))
+    curr_len = len_data
 
-        # start_time = timeit.default_timer()
+    while time_curr - time_i < recording_time * 1000 * 60:
 
-        read_line_ref = target_ref.order_by_key().limit_to_last(1).get()
-        read_line_key = list(read_line_ref.items())[0]
-        read_line_str = read_line_key[1]  # time, acc_x, acc_y, acc_z, pulse, eda
+        # delaying the loop until new data chunk arrives
+        while curr_len != len_data:
+            curr_len = len(target_ref.get(shallow=True))
 
-        if save_data:
-            data_ac.add_acquisition(read_line_str)
+        first_line_ref = target_ref.order_by_key().limit_to_last(1).get()
 
-        time_curr = acq.get_current_time(read_line_str, wifi=True)
+        len_data = curr_len # updating new nr of data chunks
 
-        if ((time_curr - time_i) * 0.001) % 10 == 0:
-            print("{}x10 seconds were recorded".format(interval_mark))
-            interval_mark += 1
+        if type(first_line_ref) is list:
+            Data_dict = first_line_ref[1]
+
+        if type(first_line_ref) is collections.OrderedDict:
+            Data_dict = list(first_line_ref.items())[0][1]
+
+        read_line_str = Data_dict['Data']    # read_line_key[1]['Data']  # time, acc_x, acc_y, acc_z, pulse, eda
+
+        time_curr_str = read_line_str[0].split(",")[0]
+        time_curr = int(float(time_curr_str))
+
+        # if ((time_curr - time_i) * 0.001) % 10 == 0:
+        #     print("{}x10 seconds were recorded".format(interval_mark))
+        #     interval_mark += 1
 
         # TODO: detection algorithm (every 1 second)
         if detect_seizure:
 
-            # first, we add the next acquired value
-            temp_window_data.append(read_line_str)
+            # TODO: until here, we have (sf * ft_window_s) + 1 points = ft_window_s seconds.
+            abs_ft_vm_arr, abs_ft_sma_arr = detection_algorithm(read_line_str)
+            times_fft.append(time_curr - time_i)
+            abs_fft_vm_list.append(abs_ft_vm_arr)
+            abs_fft_sma_list.append(abs_ft_sma_arr)
 
-            # if the first window was recorded, start detection thread and update the temp. window
-            if ((time_curr - time_i) * 0.001) == ft_window_s:
-                # algorithm itself
+            vm_num = np.squeeze(np.multiply(abs_ft_vm_arr, vm_weights))
+            sma_num = np.squeeze(np.multiply(abs_ft_sma_arr, sma_weights))
 
-                # TODO: until here, we have (sf * ft_window_s) + 1 points = ft_window_s seconds.
-                mag_arr, abs_ft_arr = detection_algorithm(temp_window_data)
-                times_fft.append(time_curr - time_i)
-                mag_list.append(mag_arr)
-                abs_fft_list.append(abs_ft_arr)
+            scr_vm = np.divide(np.sum(vm_num, axis=0), np.sum(np.squeeze(abs_ft_vm_arr), axis=0))
+            scr_sma = np.divide(np.sum(sma_num, axis=0), np.sum(np.squeeze(abs_ft_sma_arr), axis=0))
 
-                # remove the first/left (sf * ft_window_s) / 2 points, resulting in (sf * ft_window_s) + 1 points
-                for _ in range(sf * ft_window_s // window_overlap_frac):
-                    temp_window_data.popleft()
-                first_ft_window = False
+            detection_window_it += 1
+            scr_vm_sum += scr_vm
+            scr_sma_sum += scr_sma
 
-                # np.itertools.starmap(temp_window_data.popleft, np.repeat((), 4096))
+        if detection_window_it == 5:
 
-            # if the next overlapping window was recorded, start detection thread and update the temp. window
-            elif ((time_curr - time_i) * 0.001) % (ft_window_s / window_overlap_frac) == 0 and not first_ft_window:
-                times_fft.append(time_curr - time_i)
-                mag_arr, abs_ft_arr = detection_algorithm(temp_window_data)
-                mag_list.append(mag_arr)
-                abs_fft_list.append(abs_ft_arr)
+            scr_vm_avg = scr_vm_sum / (detection_window_it)
+            scr_sma_avg = scr_sma_sum / (detection_window_it)
 
-                # remove the first/left (sf * ft_window_s) / 2 points, resulting in (sf * ft_window_s) + 1 points
-                for _ in range(sf * ft_window_s // window_overlap_frac):
-                    temp_window_data.popleft()
+            print(scr_vm_avg, scr_sma_avg)
 
-            # print(' Time elapsed:', timeit.default_timer() - start_time, 's')
-        # TODO: if detection serial.write(beep)
-        i += 1
+            if scr_vm_avg > VM_thrs and scr_sma_avg > SMA_thrs:
+                db.reference("/").child("s").set({"s": "s"})
+                # print('...SEIZURE DETECTED!!!!!!')
+
+            else:
+                pass
+                # print('...normal')
+
+            scr_vm_sum = 0
+            scr_sma_sum = 0
+            scr_vm_avg = 0
+            scr_sma_avg = 0
+
+            detection_window_it = 0
 
     print("...transmission finished")
 
@@ -150,18 +244,17 @@ def main(save_data: bool, detect_seizure: bool, result_dir: str, serial_baud_r: 
         # print('FFT data saved as ' + os.path.join(result_dir, 'rt_data_fft_windows_{}.csv'.format(t)))
 
 
-def detection_algorithm(data_chunk: collections.deque, magnitude=True):
+def detection_algorithm(data_chunk: list, magnitude=True):
     # implement an algorithm based on the following article https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5375767/ [1]
     # check this one too https://odr.chalmers.se/bitstream/20.500.12380/145997/1/145997.pdf
 
     # TODO: compute the FFT weights based on a series of seizure vs baseline datasets [1]
-    mag_arr = getArrayfromStringList(data_chunk, magnitude=magnitude)
+    vm_arr, sma_arr = getArrayfromStringList(data_chunk)
 
-    ft_arr = np.fft.rfft(mag_arr)
-    abs_ft_arr = np.abs(ft_arr)
-    power_ft_arr = np.square(ft_arr)  # redundant, if every ft is expressed as absolute
-    # frequency = np.linspace(0, sampling_rate/2, len(power_spectrum))
-    return mag_arr, abs_ft_arr
+    abs_ft_vm_arr = np.abs(np.fft.rfft(vm_arr))
+    abs_ft_sma_arr = np.abs(np.fft.rfft(sma_arr))
+
+    return abs_ft_vm_arr, abs_ft_sma_arr
 
 
 def write_2(times_fft_l, mag_l, abs_fft_l):
@@ -198,29 +291,21 @@ def write_2(times_fft_l, mag_l, abs_fft_l):
         header.append('mag at point {}'.format(str(i)))
     for i in range(size_abs_fft):
         header.append('fft bin {}'.format(str(i)))
-    # print(header)
 
     return newl, header
 
 
-def getArrayfromStringList(data_lines: collections.deque, magnitude: bool):
-    if magnitude:
-        data_arr = np.zeros((1, len(data_lines)))  # [mag_acc_t1, mag_acc_t2, ..., mag_acc_tn]
-        for i in range(len(data_lines)):
-            temp = data_lines[i].replace(" ", "")
-            temp = temp[2:-5].split(',')
-            data_arr[0, i] = np.linalg.norm(np.array([float(temp[1]), float(temp[2]), float(temp[3])]))
+def getArrayfromStringList(data_lines: list):
 
-    else:
-        data_arr = np.zeros((3, len(data_lines)))
-        for i in range(len(data_lines)):
-            temp = data_lines[i].replace(" ", "")
-            temp = temp[2:-5].split(',')
-            data_arr[0, i] = float(temp[1])
-            data_arr[1, i] = float(temp[2])
-            data_arr[2, i] = float(temp[3])
+    data_arr_vm = np.zeros((1, len(data_lines)))  # [mag_acc_t1, mag_acc_t2, ..., mag_acc_tn]
+    data_arr_sma = np.zeros((1, len(data_lines)))
+    for i in range(len(data_lines)):
+        temp = data_lines[i].replace(" ", "")
+        temp = temp.split(',')
+        data_arr_vm[0, i] = np.linalg.norm(np.array([float(temp[1]), float(temp[2]), float(temp[3])]))
+        data_arr_sma[0, i] = (abs(float(temp[1])) + abs(float(temp[2])) + abs(float(temp[3]))) / 3
 
-    return data_arr
+    return data_arr_vm, data_arr_sma
 
 
 def check_default_port(port_name):
@@ -239,6 +324,12 @@ def check_default_port(port_name):
     return default, port_str
 
 
+def listener(event):
+    print(event.event_type)  # can be 'put' or 'patch'
+    print(event.path)  # relative to the reference, it seems
+    print(event.data)  # new data at /reference/event.path. None if deleted
+
+
 if __name__ == "__main__":
     """The program's entry point."""
 
@@ -249,21 +340,21 @@ if __name__ == "__main__":
     parser.add_argument(
         '--save_data',
         type=bool,
-        default=True,
+        default=False,
         help='Set to True to save data in a .csv file.'
     )
 
     parser.add_argument(
         '--detect_seizure',
         type=bool,
-        default=False,
+        default=True,
         help='Set to True to enable real-time seizure detection'
     )
 
     parser.add_argument(
         '--result_dir',
         type=str,
-        default=os.path.normpath(os.path.join(script_dir, 'data', 'trials', 'wifi')),
+        default=os.path.normpath(os.path.join(script_dir, 'data')),
         help='Directory for results (useless if save_data = False).'
     )
 
@@ -277,15 +368,15 @@ if __name__ == "__main__":
     parser.add_argument(
         '--recording_time',
         type=float,
-        default=0.5,
+        default=45,
         help='Time in minutes or fraction of minutes the data acquisition will take.'
     )
 
     parser.add_argument(
         '--acquired_signals',
         type=list,
-        default=['time', 'eda', 'eda', 'eda'],
-        help='Time in minutes or fraction of minutes the data acquisition will take.'
+        default=['time', 'acc', 'pulse', 'eda'],
+        help='A list of the names of the signals needed to be acquired. Edit it if you do not have some sensors.'
     )
 
     parser.add_argument(
